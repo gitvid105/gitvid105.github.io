@@ -114,6 +114,26 @@ window.logout = async function () {
   await supabase.auth.signOut();
   window.location.href = "/";
 };
+  const bucket = "videos";
+
+window.uploadVideo = async function () {
+  const file = document.getElementById("upload").files[0];
+  if (!file) return alert("Pick a video first");
+
+  const fileName = `${Date.now()}-${file.name}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file);
+
+  if (error) {
+    console.log(error);
+    alert("Upload failed");
+    return;
+  }
+
+  alert("Upload successful!");
+};
 </script>
 
 </body>
