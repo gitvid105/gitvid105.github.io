@@ -14,14 +14,12 @@
       color:white;
     }
 
-    .box {
-      text-align:center;
-    }
+    .box { text-align:center; }
 
     input, button {
       padding:10px;
       margin:5px;
-      width:250px;
+      width:260px;
     }
   </style>
 </head>
@@ -32,7 +30,11 @@
   <h1>gitvid</h1>
 
   <input id="email" placeholder="email" />
-  <button onclick="login()">Send Magic Link</button>
+  <input id="username" placeholder="username" />
+  <input id="password" type="password" placeholder="password" />
+
+  <button onclick="signup()">Create Account</button>
+  <button onclick="login()">Login</button>
 
   <p id="msg"></p>
 </div>
@@ -45,13 +47,49 @@ const supabase = createClient(
   "sb_publishable_Ud5J0HvgWm2LWbH6W4oQLQ_wCXG6MEr"
 );
 
+window.signup = async function () {
+  const email = document.getElementById("email").value;
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    document.getElementById("msg").innerText = error.message;
+    return;
+  }
+
+  // store username
+  const user = data.user;
+
+  if (user) {
+    await supabase.from("profiles").insert({
+      id: user.id,
+      username: username
+    });
+  }
+
+  document.getElementById("msg").innerText = "Account created. Now log in.";
+};
+
 window.login = async function () {
   const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  const { error } = await supabase.auth.signInWithOtp({ email });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-  document.getElementById("msg").innerText =
-    error ? error.message : "Check your email";
+  if (error) {
+    document.getElementById("msg").innerText = error.message;
+    return;
+  }
+
+  window.location.href = "/";
 };
 </script>
 
