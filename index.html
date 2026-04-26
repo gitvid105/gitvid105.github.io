@@ -1,44 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>gitvid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
+      margin: 0;
+      font-family: Arial;
       background: white;
       color: black;
-      font-family: Arial;
-      padding: 20px;
     }
 
-    input {
-      display: block;
-      margin: 10px 0;
+    header {
+      display: flex;
+      align-items: center;
       padding: 10px;
-      width: 250px;
+      border-bottom: 1px solid #ccc;
+      gap: 10px;
     }
 
-    button {
-      margin: 5px;
-      padding: 10px;
+    .login-btn {
+      background: #eee;
+      border: 1px solid #ccc;
+      color: black;
+      padding: 8px 12px;
       cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .search {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: white;
+      color: black;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 15px;
+    }
+
+    .card {
+      background: #f5f5f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+    }
+
+    .title {
+      padding: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Login / Sign up</h2>
+<header>
+  <button class="login-btn" id="user-area" onclick="goAccount()">Login</button>
+  <input class="search" id="search" placeholder="Search videos..." oninput="filterVideos()" />
+</header>
 
-<input id="email" placeholder="email" />
-<input id="password" type="password" placeholder="password" />
-<input id="username" placeholder="username (for signup)" />
-
-<button onclick="signUp()">Create account</button>
-<button onclick="signIn()">Login</button>
-
-<p id="msg"></p>
+<div class="grid" id="grid"></div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
@@ -48,41 +80,67 @@ const supabase = createClient(
   "sb_publishable_Ud5J0HvgWm2LWbH6W4oQLQ_wCXG6MEr"
 );
 
-window.signUp = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const username = document.getElementById("username").value;
+const bucket = "videos";
+let allVideos = [];
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        display_name: username
-      }
-    }
-  });
-
-  document.getElementById("msg").innerText =
-    error ? error.message : "Account created!";
+window.goAccount = function () {
+  window.location.href = "/account.html";
 };
 
-window.signIn = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+async function setUser() {
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    document.getElementById("msg").innerText = error.message;
-    return;
+  if (user) {
+    document.getElementById("user-area").innerText =
+      user.user_metadata?.display_name || user.email;
   }
+}
 
-  window.location.href = "/";
+async function loadVideos() {
+  const { data } = await supabase.storage.from(bucket).list();
+
+  allVideos = data || [];
+  renderVideos(allVideos);
+}
+
+function renderVideos(videos) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  videos.forEach(file => {
+    const url = supabase.storage
+      .from(bucket)
+      .getPublicUrl(file.name).data.publicUrl;
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.innerText = file.name;
+
+    card.appendChild(video);
+    card.appendChild(title);
+    grid.appendChild(card);
+  });
+}
+
+window.filterVideos = function () {
+  const term = document.getElementById("search").value.toLowerCase();
+
+  const filtered = allVideos.filter(v =>
+    v.name.toLowerCase().includes(term)
+  );
+
+  renderVideos(filtered);
 };
+
+loadVideos();
+setUser();
 </script>
 
 </body>
