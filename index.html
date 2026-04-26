@@ -3,51 +3,74 @@
 <head>
   <title>gitvid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body { font-family: Arial; margin: 0; background:#111; color:white; }
-
-    .center {
-      display:flex;
-      height:100vh;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f0f0f;
+      color: white;
     }
 
-    input, button {
-      padding:10px;
-      margin:5px;
-      width:250px;
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #222;
+      gap: 10px;
     }
 
-    #app { display:none; padding:20px; }
+    .login-btn {
+      background: #222;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .search {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 15px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+    }
+
+    .title {
+      padding: 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN PAGE -->
-<div id="login" class="center">
-  <h1>gitvid login</h1>
+<header>
+  <button class="login-btn" onclick="goLogin()">Login</button>
+  <input class="search" id="search" placeholder="Search videos..." oninput="filterVideos()" />
+</header>
 
-  <input id="email" placeholder="email" />
-  <button onclick="login()">Send Magic Link</button>
-
-  <p id="msg"></p>
-</div>
-
-<!-- APP PAGE -->
-<div id="app">
-  <h1>gitvid</h1>
-
-  <input type="file" id="fileInput" />
-  <button onclick="uploadVideo()">Upload</button>
-
-  <h2>Videos</h2>
-  <div id="gallery"></div>
-
-  <button onclick="logout()">Logout</button>
-</div>
+<div class="grid" id="grid"></div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
@@ -58,72 +81,56 @@ const supabase = createClient(
 );
 
 const bucket = "videos";
+let allVideos = [];
 
-/* ---------- AUTH ---------- */
-
-window.login = async function () {
-  const email = document.getElementById("email").value;
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email
-  });
-
-  document.getElementById("msg").innerText =
-    error ? error.message : "Check your email for login link";
+window.goLogin = function () {
+  window.location.href = "/login.html";
 };
-
-window.logout = async function () {
-  await supabase.auth.signOut();
-  location.reload();
-};
-
-/* ---------- APP ---------- */
-
-async function uploadVideo() {
-  const file = document.getElementById("fileInput").files[0];
-  if (!file) return alert("Pick a file");
-
-  const path = `${Date.now()}-${file.name}`;
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file);
-
-  if (error) return alert(error.message);
-
-  loadVideos();
-}
 
 async function loadVideos() {
   const { data } = await supabase.storage.from(bucket).list();
 
-  const gallery = document.getElementById("gallery");
-  gallery.innerHTML = "";
+  allVideos = data || [];
+  renderVideos(allVideos);
+}
 
-  data.forEach(file => {
-    const url = supabase.storage.from(bucket)
+function renderVideos(videos) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  videos.forEach(file => {
+    const url = supabase.storage
+      .from(bucket)
       .getPublicUrl(file.name).data.publicUrl;
 
-    const v = document.createElement("video");
-    v.src = url;
-    v.controls = true;
-    v.width = 300;
+    const card = document.createElement("div");
+    card.className = "card";
 
-    gallery.appendChild(v);
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.innerText = file.name;
+
+    card.appendChild(video);
+    card.appendChild(title);
+    grid.appendChild(card);
   });
 }
 
-window.uploadVideo = uploadVideo;
+window.filterVideos = function () {
+  const term = document.getElementById("search").value.toLowerCase();
 
-/* ---------- SESSION CHECK ---------- */
+  const filtered = allVideos.filter(v =>
+    v.name.toLowerCase().includes(term)
+  );
 
-supabase.auth.getSession().then(({ data }) => {
-  if (data.session) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    loadVideos();
-  }
-});
+  renderVideos(filtered);
+};
+
+loadVideos();
 </script>
 
 </body>
