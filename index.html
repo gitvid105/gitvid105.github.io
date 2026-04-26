@@ -129,7 +129,14 @@ window.filterVideos = function () {
 
   renderVideos(filtered);
 };
+async function setUser() {
+  const { data: { user } } = await supabase.auth.getUser();
 
+  if (user) {
+    document.getElementById("user-area").innerText =
+      user.user_metadata?.display_name || user.email;
+  }
+}
 loadVideos();
 setUser();
 </script>
