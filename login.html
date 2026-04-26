@@ -52,10 +52,17 @@ window.signup = async function () {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password
-  });
+  const username = document.getElementById("username").value;
+
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: {
+      display_name: username
+    }
+  }
+});
 
   if (error) {
     document.getElementById("msg").innerText = error.message;
