@@ -17,8 +17,8 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    const SUPABASE_URL = "YOUR_PROJECT_URL";
-    const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
+    const SUPABASE_URL = "https://qrxviajrlqzoxpewbrev.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_Ud5J0HvgWm2LWbH6W4oQLQ_wCXG6MEr";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -49,7 +49,8 @@
       gallery.innerHTML = "";
 
       data.forEach(file => {
-        const url = supabase.storage.from(bucket).getPublicUrl(file.name).data.publicUrl;
+        const url = supabase.storage.from(bucket)
+          .getPublicUrl(file.name).data.publicUrl;
 
         const video = document.createElement("video");
         video.src = url;
