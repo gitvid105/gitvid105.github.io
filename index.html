@@ -3,60 +3,64 @@
 <head>
   <title>gitvid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      background: #111;
-      color: white;
-    }
-
-    h1 {
-      text-align: center;
-      padding: 20px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-      padding: 20px;
-    }
-
-    .video {
-      background: #222;
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 8px;
-    }
-  </style>
 </head>
 
 <body>
+  <h1>gitvid upload test</h1>
 
-  <h1>gitvid</h1>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadVideo()">Upload</button>
 
-  <div class="grid">
+  <h2>Videos</h2>
+  <div id="gallery"></div>
 
-    <div class="video">
-      <video controls>
-        <source src="video1.mp4" type="video/mp4">
-      </video>
-      <p>Video 1</p>
-    </div>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    <div class="video">
-      <video controls>
-        <source src="video2.mp4" type="video/mp4">
-      </video>
-      <p>Video 2</p>
-    </div>
+    const SUPABASE_URL = "YOUR_PROJECT_URL";
+    const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
 
-  </div>
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const bucket = "videos";
+
+    async function uploadVideo() {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return alert("Pick a file first");
+
+      const filePath = `${Date.now()}-${file.name}`;
+
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file);
+
+      if (error) {
+        alert("Upload failed: " + error.message);
+        return;
+      }
+
+      loadVideos();
+    }
+
+    async function loadVideos() {
+      const { data } = await supabase.storage.from(bucket).list();
+
+      const gallery = document.getElementById("gallery");
+      gallery.innerHTML = "";
+
+      data.forEach(file => {
+        const url = supabase.storage.from(bucket).getPublicUrl(file.name).data.publicUrl;
+
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.width = 300;
+
+        gallery.appendChild(video);
+      });
+    }
+
+    loadVideos();
+  </script>
 </body>
 </html>
