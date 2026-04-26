@@ -3,16 +3,60 @@
 <head>
   <title>gitvid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #111;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .video {
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 
-<body style="font-family: Arial; text-align: center; margin-top: 80px;">
+<body>
 
   <h1>gitvid</h1>
-  <p>A simple web app in progress.</p>
 
-  <button onclick="alert('it works')">
-    Click me
-  </button>
+  <div class="grid">
+
+    <div class="video">
+      <video controls>
+        <source src="video1.mp4" type="video/mp4">
+      </video>
+      <p>Video 1</p>
+    </div>
+
+    <div class="video">
+      <video controls>
+        <source src="video2.mp4" type="video/mp4">
+      </video>
+      <p>Video 2</p>
+    </div>
+
+  </div>
 
 </body>
 </html>
