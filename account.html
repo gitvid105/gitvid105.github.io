@@ -2,13 +2,78 @@
 <html>
 <head>
   <title>Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #f2f2f2;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tab {
+      padding: 10px;
+      cursor: pointer;
+      background: white;
+      border: 1px solid #ccc;
+    }
+
+    .tab.active {
+      background: #ddd;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2 id="name">Loading...</h2>
+<div class="sidebar">
+  <div class="tab active" onclick="showTab('videos')">Your Videos</div>
+  <div class="tab" onclick="showTab('account')">Manage Account</div>
+</div>
 
-<button onclick="logout()">Sign out</button>
+<div class="content">
+
+  <div id="videos">
+    <h2>Your Videos</h2>
+    <input type="file" id="upload" />
+  </div>
+
+  <div id="account" class="hidden">
+    <h2>Manage Account</h2>
+
+    <input id="username" placeholder="new username" />
+    <button onclick="updateUsername()">Update username</button>
+
+    <br><br>
+
+    <input id="newpass" type="password" placeholder="new password" />
+    <button onclick="updatePassword()">Change password</button>
+
+    <br><br>
+
+    <button onclick="logout()">Sign out</button>
+  </div>
+
+</div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
@@ -18,24 +83,36 @@ const supabase = createClient(
   "sb_publishable_Ud5J0HvgWm2LWbH6W4oQLQ_wCXG6MEr"
 );
 
-async function loadUser() {
-  const { data: { user } } = await supabase.auth.getUser();
+window.showTab = function (tab) {
+  document.getElementById("videos").classList.add("hidden");
+  document.getElementById("account").classList.add("hidden");
 
-  if (!user) {
-    window.location.href = "/login.html";
-    return;
-  }
+  document.getElementById(tab).classList.remove("hidden");
 
-  document.getElementById("name").innerText =
-    user.user_metadata?.display_name || user.email;
-}
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  event.target.classList.add("active");
+};
+
+window.updateUsername = async function () {
+  const username = document.getElementById("username").value;
+
+  await supabase.auth.updateUser({
+    data: { display_name: username }
+  });
+};
+
+window.updatePassword = async function () {
+  const newpass = document.getElementById("newpass").value;
+
+  await supabase.auth.updateUser({
+    password: newpass
+  });
+};
 
 window.logout = async function () {
   await supabase.auth.signOut();
   window.location.href = "/";
 };
-
-loadUser();
 </script>
 
 </body>
